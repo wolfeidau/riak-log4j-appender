@@ -48,11 +48,11 @@ public class RiakAppenderTest {
 
         final Logger logger = Logger.getRootLogger();
 
-        logger.setLevel(Level.INFO);
+        logger.setLevel(Level.OFF);
 
         logger.addAppender(riakAppender);
 
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 100; i++) {
             logger.info("message " + i, new IOException("Some random IO error"));
         }
 

@@ -20,12 +20,8 @@ package au.id.wolfe.riak.log4j;
 import com.basho.riak.client.RiakClient;
 import com.basho.riak.client.RiakObject;
 import com.google.common.collect.ImmutableMap;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.spi.LoggingEvent;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.json.JSONException;
-import org.json.JSONStringer;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -37,7 +33,7 @@ import java.util.Map;
 public class RiakAppender extends org.apache.log4j.AppenderSkeleton
         implements org.apache.log4j.Appender {
 
-    private final Log log = LogFactory.getLog(getClass());
+    //private final Log log = LogFactory.getLog(getClass());
 
     ObjectMapper mapper = new ObjectMapper();
 
@@ -93,7 +89,6 @@ public class RiakAppender extends org.apache.log4j.AppenderSkeleton
         } catch (JSONException e) {
             log.error(e.getMessage(), e);
         }*/
-
 
 
 /*

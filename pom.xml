@@ -58,6 +58,21 @@
         </plugins>
     </build>
 
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <configuration>
+                    <consoleOutput>true</consoleOutput>
+                    <enableRulesSummary>true</enableRulesSummary>
+                    <configLocation>${basedir}/src/etc/checkstyle.xml</configLocation>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
+
     <dependencies>
 
         <dependency>
