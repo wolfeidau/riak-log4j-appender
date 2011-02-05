@@ -17,104 +17,157 @@
 
 package au.id.wolfe.riak.log4j;
 
-import com.basho.riak.client.RiakClient;
-import com.basho.riak.client.RiakObject;
-import com.google.common.collect.ImmutableMap;
+import au.id.wolfe.riak.log4j.util.Assert;
 import org.apache.log4j.spi.LoggingEvent;
-import org.codehaus.jackson.map.ObjectMapper;
+import org.jboss.netty.bootstrap.ClientBootstrap;
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
+import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelFuture;
+import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import org.jboss.netty.handler.codec.http.*;
+import org.json.JSONException;
+import org.json.JSONStringer;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.Map;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
+ * This log4j appender builds and stores log events in riak.
+ *
  * @author Mark Wolfe (<A HREF="mailto:mark@wolfe.id.au">mark@wolfe.id.au</A>)
  */
 public class RiakAppender extends org.apache.log4j.AppenderSkeleton
         implements org.apache.log4j.Appender {
 
-    //private final Log log = LogFactory.getLog(getClass());
+    /* sequence number for records created by this appender */
+    private final AtomicLong sequence = new AtomicLong();
 
-    ObjectMapper mapper = new ObjectMapper();
+    /* URL of the RIAK server */
+    private String url;
 
-    String url;
+    /* bucket this will append messages too */
+    private String bucket;
 
-    RiakClient riakClient;
+    /* RFC822 date formatter */
+    private final SimpleDateFormat format =
+            new SimpleDateFormat("yyyy-mm-DD'T'hh:mm:ssZ");
 
-    String bucket;
+    // Configure the client.
+    ClientBootstrap bootstrap = new ClientBootstrap(
+            new NioClientSocketChannelFactory(
+                    Executors.newCachedThreadPool(),
+                    Executors.newCachedThreadPool()));
 
     @Override
     protected void append(LoggingEvent event) {
 
-        //String resultString = null;
-
-        StringWriter jsonWriter = new StringWriter();
-
-        Map<String, Object> untyped = new ImmutableMap.Builder<String, Object>()
-                .put("thread", event.getThreadName())
-                .put("class", event.getFQNOfLoggerClass())
-                .put("level", event.getLevel())
-                .put("message", event.getMessage())
-                .put("timestamp", event.getTimeStamp())
-                .build();
-
         try {
-            mapper.writeValue(jsonWriter, untyped);
-
-            getRiakClient().store(new RiakObject(bucket, Long.toString(event.getTimeStamp()), jsonWriter.toString()));
-
-        } catch (IOException e) {
-            // ignore
-        }
-
-
-/*        try {
-            resultString = new JSONStringer()
-                    .object()
-                    .key("thread")
-                    .value(event.getThreadName())
-                    .key("class")
-                    .value(event.getFQNOfLoggerClass())
-                    .key("level")
-                    .value(event.getLevel())
-                    .key("message")
-                    .value(event.getMessage())
-                    .key("timestamp")
-                    .value(event.getTimeStamp())
-                    .endObject()
-                    .toString();
-
-            getRiakClient().store(new RiakObject(bucket, Long.toString(event.getTimeStamp()), resultString));
-
+            storeJson(buildJson(event));
         } catch (JSONException e) {
-            log.error(e.getMessage(), e);
-        }*/
-
-
-/*
-        if (event.getThrowableInformation() != null){
-            JSONArray jsonArray = new JSONArray(event.getThrowableInformation().getThrowableStrRep())
+            // todo ErrorHandler
         }
-*/
+
     }
 
-    private RiakClient getRiakClient() {
-        if (riakClient == null) {
-            riakClient = new RiakClient(url);
+    private void storeJson(String jsonObject){
+
+        ChannelBuffer ch = ChannelBuffers.copiedBuffer(jsonObject.toCharArray(), Charset.defaultCharset());
+
+        URI uri = buildRiakURL(url, bucket);
+
+        String host = uri.getHost();
+        int port = uri.getPort();
+        String scheme = uri.getScheme();
+
+        if (!scheme.equalsIgnoreCase("http") && !scheme.equalsIgnoreCase("https")) {
+            System.err.println("Only HTTP(S) is supported.");
+            return;
         }
-        return riakClient;
+
+        bootstrap.setPipelineFactory(new HttpClientPipelineFactory());
+
+        // Start the connection attempt.
+        ChannelFuture future = bootstrap.connect(new InetSocketAddress(host, port));
+
+        // Wait until the connection attempt succeeds or fails.
+        Channel channel = future.awaitUninterruptibly().getChannel();
+
+        if (!future.isSuccess()) {
+            errorHandler.error("Failed to connect to server. seq = " + sequence.get());
+            bootstrap.releaseExternalResources();
+            return;
+        }
+
+        // Prepare the HTTP request.
+        HttpRequest request = new DefaultHttpRequest(
+                HttpVersion.HTTP_1_1, HttpMethod.POST, uri.toASCIIString());
+        request.setContent(ch);
+        request.setHeader(HttpHeaders.Names.CONTENT_TYPE, "application/json");
+        request.setHeader(HttpHeaders.Names.HOST, host);
+        request.setHeader(HttpHeaders.Names.CONNECTION, HttpHeaders.Values.CLOSE);
+        request.setHeader(HttpHeaders.Names.ACCEPT_ENCODING, HttpHeaders.Values.GZIP);
+
+        // Send the HTTP request.
+        channel.write(request);
+
+        // Wait for the server to close the connection.
+        channel.getCloseFuture().awaitUninterruptibly();
+
+        // Need ascertain if the record was store was successful
+        if (!((HttpResponseHandler) channel.getPipeline().get("handler")).success){
+            errorHandler.error("Failed to store message. seq = " + sequence.get());
+        }
+
     }
 
-    public String getUrl() {
-        return url;
+    /* builds the JSON string containing the log event attributes i wanted */
+    private String buildJson(LoggingEvent event) throws JSONException {
+
+        return new JSONStringer()
+                .object()
+                .key("thread").value(event.getThreadName())
+                .key("class").value(event.getFQNOfLoggerClass())
+                .key("level").value(event.getLevel())
+                .key("message").value(event.getMessage())
+                .key("timestamp").value(event.getTimeStamp())
+                .endObject()
+                .toString();
+
+    }
+
+    /* Builds the key for the log entry, at this stage it is {RFC822date}-{sequence} */
+    private String buildKey(LoggingEvent event) {
+
+        String dateStamp = format.format(new Date(event.getTimeStamp()));
+        long sequenceValue = sequence.getAndDecrement();
+
+        return String.format("%s-%d", dateStamp, sequenceValue);
+    }
+
+
+    public URI buildRiakURL(String url, String bucket) {
+
+        Assert.notNull(url, "Url is null");
+        Assert.notNull(bucket, "Bucket is null");
+
+        URI uri = URI.create(url);
+
+        if (uri.getPath().endsWith("/")) {
+            return URI.create(uri.toString().concat(bucket));
+        } else {
+            return URI.create(uri.toString() + "/" + bucket);
+        }
+
     }
 
     public void setUrl(String url) {
         this.url = url;
-    }
-
-    public String getBucket() {
-        return bucket;
     }
 
     public void setBucket(String bucket) {
@@ -122,7 +175,10 @@ public class RiakAppender extends org.apache.log4j.AppenderSkeleton
     }
 
     public void close() {
-        // Not required
+
+        // Shut down executor threads to exit.
+        bootstrap.releaseExternalResources();
+
     }
 
     public boolean requiresLayout() {
