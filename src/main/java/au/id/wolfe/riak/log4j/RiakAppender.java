@@ -64,11 +64,12 @@ public class RiakAppender extends org.apache.log4j.AppenderSkeleton
 
     }
 
+    /* Uses riak client to store the object */
     private void storeJson(String jsonObject) {
         try {
             riakClient.store(url, bucket, jsonObject);
         } catch (RiakTransportException e) {
-            errorHandler.error("Error closing connection", e, ErrorCode.GENERIC_FAILURE);
+            errorHandler.error("Error storing record", e, ErrorCode.GENERIC_FAILURE);
         }
     }
 

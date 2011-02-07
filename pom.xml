@@ -50,6 +50,7 @@
                     <header>${basedir}/src/etc/header.txt</header>
                     <excludes>
                         <exclude>${basedir}/src/etc/header.txt</exclude>
+                        <exclude>src/main/java/org/json/*.java</exclude>
                         <exclude>.idea/**</exclude>
                     </excludes>
                 </configuration>
