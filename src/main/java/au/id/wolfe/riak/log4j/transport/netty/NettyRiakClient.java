@@ -69,6 +69,8 @@ public class NettyRiakClient implements RiakClient {
 
         RiakResponseHandler storeResponseHandler = new RiakResponseHandler();
 
+        bootstrap.setOption("tcpNoDelay", true);
+
         bootstrap.setPipelineFactory(new NettyHttpClientPipelineFactory(storeResponseHandler));
 
         // Start the connection attempt.
