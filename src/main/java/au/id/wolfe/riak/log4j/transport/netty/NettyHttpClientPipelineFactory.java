@@ -1,4 +1,4 @@
-package au.id.wolfe.riak.log4j;
+package au.id.wolfe.riak.log4j.transport.netty;
 
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
@@ -10,9 +10,12 @@ import org.jboss.netty.handler.codec.http.HttpContentDecompressor;
 /**
  *
  */
-public class HttpClientPipelineFactory implements ChannelPipelineFactory {
+public class NettyHttpClientPipelineFactory implements ChannelPipelineFactory {
 
-    public HttpClientPipelineFactory() {
+    StoreResponseHandler storeResponseHandler;
+
+    public NettyHttpClientPipelineFactory(StoreResponseHandler storeResponseHandler) {
+        this.storeResponseHandler = storeResponseHandler;
     }
 
     public ChannelPipeline getPipeline() throws Exception {
@@ -26,7 +29,7 @@ public class HttpClientPipelineFactory implements ChannelPipelineFactory {
         pipeline.addLast("inflater", new HttpContentDecompressor());
 
         // response handler
-        pipeline.addLast("handler", new HttpResponseHandler());
+        pipeline.addLast("handler", storeResponseHandler);
 
         return pipeline;
     }

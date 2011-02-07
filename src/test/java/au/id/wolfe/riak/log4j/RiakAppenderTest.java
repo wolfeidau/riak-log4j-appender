@@ -34,8 +34,8 @@ public class RiakAppenderTest {
         final RiakAppender riakAppender = new RiakAppender();
 
         riakAppender.setName("bob");
-        //riakAppender.setUrl("http://172.16.252.128:80/riak");
-        riakAppender.setUrl("http://172.16.252.128:8098/riak");
+        riakAppender.setUrl("http://192.168.0.39:8098/riak");
+        //riakAppender.setUrl("http://172.16.252.128:8098/riak");
         riakAppender.setBucket("testing");
 
         final Logger logger = Logger.getRootLogger();
@@ -44,7 +44,7 @@ public class RiakAppenderTest {
 
         logger.addAppender(riakAppender);
 
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 10000; i++) {
             logger.error("message " + i, new IOException("Some random IO error"));
         }
 
