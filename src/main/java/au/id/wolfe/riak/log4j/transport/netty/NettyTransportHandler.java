@@ -79,12 +79,12 @@ public class NettyTransportHandler {
         }
     }
 
-    private SocketAddress getSocketAddress(URL url) {
+    private SocketAddress getSocketAddress(URL inputUrl) {
 
-        int port = url.getPort();
+        int port = inputUrl.getPort();
 
         if (port < 0) {
-            String protocol = url.getProtocol();
+            String protocol = inputUrl.getProtocol();
 
             if ("http".equalsIgnoreCase(protocol)) {
                 port = 80;
@@ -93,7 +93,7 @@ public class NettyTransportHandler {
             }
         }
 
-        return new InetSocketAddress(url.getHost(), port);
+        return new InetSocketAddress(inputUrl.getHost(), port);
     }
 
     public URL getUrl() {

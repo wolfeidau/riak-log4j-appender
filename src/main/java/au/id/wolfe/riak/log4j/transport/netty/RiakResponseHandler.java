@@ -79,7 +79,7 @@ public class RiakResponseHandler extends SimpleChannelUpstreamHandler {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
 
-        if (futureResult.isCancelled()){
+        if (futureResult.isCancelled()) {
             return;
         }
         futureResult.start();
@@ -91,6 +91,9 @@ public class RiakResponseHandler extends SimpleChannelUpstreamHandler {
         return futureResult;
     }
 
+    /**
+     * Future result which manages the state of the response.
+     */
     public static class FutureResult implements Future<Result> {
 
         private volatile Result result;
@@ -155,7 +158,8 @@ public class RiakResponseHandler extends SimpleChannelUpstreamHandler {
             return result;
         }
 
-        public Result get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+        public Result get(long timeout, TimeUnit unit)
+                throws InterruptedException, ExecutionException, TimeoutException {
 
             synchronized (this) {
                 if (responseStatus != ResponseStatus.DONE) {
@@ -183,17 +187,23 @@ public class RiakResponseHandler extends SimpleChannelUpstreamHandler {
         }
     }
 
+    /**
+     * Summarised result of a http request containing headers and status code
+     */
     public interface Result {
 
-        public Map<String, List<String>> getResponseHeaders();
+        Map<String, List<String>> getResponseHeaders();
 
-        public int getStatusCode();
+        int getStatusCode();
 
-        public void setStatusCode(int statusCode);
+        void setStatusCode(int statusCode);
 
-        public String getHeadersAsString();
+        String getHeadersAsString();
     }
 
+    /**
+     * Result implementation
+     */
     public static class ResultImpl implements Result {
 
         Map<String, List<String>> responseHeaders = new HashMap<String, List<String>>();

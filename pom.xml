@@ -69,6 +69,7 @@
                     <consoleOutput>true</consoleOutput>
                     <enableRulesSummary>true</enableRulesSummary>
                     <configLocation>${basedir}/src/etc/checkstyle.xml</configLocation>
+                    <excludes>**/org/json/**/*</excludes>
                 </configuration>
             </plugin>
         </plugins>

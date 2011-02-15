@@ -20,18 +20,23 @@ package au.id.wolfe.riak.log4j.transport.netty;
 import au.id.wolfe.riak.log4j.transport.RiakClient;
 import au.id.wolfe.riak.log4j.transport.RiakTransportException;
 import au.id.wolfe.riak.log4j.transport.netty.RiakResponseHandler.Result;
-import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
-import org.jboss.netty.handler.codec.http.*;
+import org.jboss.netty.handler.codec.http.DefaultHttpRequest;
+import org.jboss.netty.handler.codec.http.HttpHeaders;
+import org.jboss.netty.handler.codec.http.HttpMethod;
+import org.jboss.netty.handler.codec.http.HttpRequest;
+import org.jboss.netty.handler.codec.http.HttpVersion;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static au.id.wolfe.riak.log4j.utils.Tracer.log;
 
@@ -66,7 +71,8 @@ public class NettyRiakClientNew implements RiakClient {
         }
 
 
-        NettyTransportHandler nettyTransportHandler = nettyTransportHandlerFactory.getNettyTransportHandler(target, new BasicHttpPipelineFactory());
+        NettyTransportHandler nettyTransportHandler =
+                nettyTransportHandlerFactory.getNettyTransportHandler(target, new BasicHttpPipelineFactory());
 
         Channel channel = null;
         Result result = null;

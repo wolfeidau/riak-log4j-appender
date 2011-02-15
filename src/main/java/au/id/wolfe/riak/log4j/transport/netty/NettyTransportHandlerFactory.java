@@ -22,14 +22,15 @@ public class NettyTransportHandlerFactory {
         this.factoryProvider = factoryProvider;
     }
 
-    public NettyTransportHandler getNettyTransportHandler(URL url, ChannelPipelineFactory pipelineFactory){
+    public NettyTransportHandler getNettyTransportHandler(URL url, ChannelPipelineFactory pipelineFactory) {
 
         NettyTransportHandler nettyTransportHandler;
 
         nettyTransportHandler = keepAliveCache.get(url);
 
-        if (nettyTransportHandler == null){
-            nettyTransportHandler = new NettyTransportHandler(url, pipelineFactory, factoryProvider.getClientSocketChannelFactory());
+        if (nettyTransportHandler == null) {
+            nettyTransportHandler =
+                    new NettyTransportHandler(url, pipelineFactory, factoryProvider.getClientSocketChannelFactory());
         }
 
         nettyTransportHandler.setNettyTransportHandlerFactory(this);
@@ -42,7 +43,7 @@ public class NettyTransportHandlerFactory {
         keepAliveCache.put(nettyTransportHandler.getUrl(), nettyTransportHandler);
     }
 
-    public void shutdown(){
+    public void shutdown() {
 
         keepAliveCache.shutdown();
 

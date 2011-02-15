@@ -19,7 +19,6 @@ package au.id.wolfe.riak.log4j;
 
 import au.id.wolfe.riak.log4j.transport.RiakClient;
 import au.id.wolfe.riak.log4j.transport.RiakTransportException;
-import au.id.wolfe.riak.log4j.transport.netty.NettyRiakClient;
 import au.id.wolfe.riak.log4j.transport.netty.NettyRiakClientNew;
 import au.id.wolfe.riak.log4j.utils.Tracer;
 import org.apache.log4j.spi.ErrorCode;
@@ -82,7 +81,7 @@ public class RiakAppender extends org.apache.log4j.AppenderSkeleton
         JSONArray throwableInfo = null;
 
 
-        if (event.getThrowableStrRep() != null){
+        if (event.getThrowableStrRep() != null) {
             throwableInfo = new JSONArray(event.getThrowableStrRep());
         }
 

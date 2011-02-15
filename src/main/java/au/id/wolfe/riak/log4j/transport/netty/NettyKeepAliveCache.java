@@ -186,7 +186,9 @@ public class NettyKeepAliveCache implements Runnable {
                 return false;
             }
             KeepAliveKey keepAliveKey = (KeepAliveKey) obj;
-            return host.equals(keepAliveKey.host) && (port == keepAliveKey.port) && protocol.equals(keepAliveKey.protocol);
+            return host.equals(keepAliveKey.host)
+                    && (port == keepAliveKey.port)
+                    && protocol.equals(keepAliveKey.protocol);
         }
     }
 

@@ -18,13 +18,11 @@
 package au.id.wolfe.riak.log4j.transport;
 
 /**
- *
  * This exception is thrown when their is a transport issue while communicating with riak.
- *
  */
-public class RiakTransportException extends Exception{
+public class RiakTransportException extends Exception {
 
-    public RiakTransportException()  {
+    public RiakTransportException() {
         super();
     }
 

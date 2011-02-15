@@ -9,5 +9,5 @@ import org.jboss.netty.channel.socket.ClientSocketChannelFactory;
  */
 public interface ClientSocketChannelFactoryProvider {
 
-    public ClientSocketChannelFactory getClientSocketChannelFactory();
+    ClientSocketChannelFactory getClientSocketChannelFactory();
 }

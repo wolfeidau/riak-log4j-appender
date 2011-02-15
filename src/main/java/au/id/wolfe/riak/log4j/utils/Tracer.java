@@ -7,9 +7,9 @@ public final class Tracer {
 
     private static boolean traceEnabled = false;
 
-    public static void log(String message){
+    public static void log(String message) {
 
-        if (traceEnabled){
+        if (traceEnabled) {
             System.out.println(message);
         }
     }
