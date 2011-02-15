@@ -20,8 +20,11 @@ package au.id.wolfe.riak.log4j;
 import au.id.wolfe.riak.log4j.transport.RiakClient;
 import au.id.wolfe.riak.log4j.transport.RiakTransportException;
 import au.id.wolfe.riak.log4j.transport.netty.NettyRiakClient;
+import au.id.wolfe.riak.log4j.transport.netty.NettyRiakClientNew;
+import au.id.wolfe.riak.log4j.utils.Tracer;
 import org.apache.log4j.spi.ErrorCode;
 import org.apache.log4j.spi.LoggingEvent;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONStringer;
 
@@ -50,7 +53,7 @@ public class RiakAppender extends org.apache.log4j.AppenderSkeleton
     private final SimpleDateFormat format =
             new SimpleDateFormat("yyyy-mm-DD'T'hh:mm:ssZ");
 
-    private RiakClient riakClient = new NettyRiakClient();
+    private RiakClient riakClient = new NettyRiakClientNew();
 
 
     @Override
@@ -59,7 +62,7 @@ public class RiakAppender extends org.apache.log4j.AppenderSkeleton
         try {
             storeJson(buildJson(event));
         } catch (JSONException e) {
-            // todo ErrorHandler
+            errorHandler.error("Error encoding record to JSON format.", e, ErrorCode.GENERIC_FAILURE);
         }
 
     }
@@ -69,12 +72,19 @@ public class RiakAppender extends org.apache.log4j.AppenderSkeleton
         try {
             riakClient.store(url, bucket, jsonObject);
         } catch (RiakTransportException e) {
-            errorHandler.error("Error storing record", e, ErrorCode.GENERIC_FAILURE);
+            errorHandler.error("Error storing record", e, ErrorCode.WRITE_FAILURE);
         }
     }
 
     /* builds the JSON string containing the log event attributes i wanted */
     private String buildJson(LoggingEvent event) throws JSONException {
+
+        JSONArray throwableInfo = null;
+
+
+        if (event.getThrowableStrRep() != null){
+            throwableInfo = new JSONArray(event.getThrowableStrRep());
+        }
 
         return new JSONStringer()
                 .object()
@@ -82,6 +92,7 @@ public class RiakAppender extends org.apache.log4j.AppenderSkeleton
                 .key("class").value(event.getFQNOfLoggerClass())
                 .key("level").value(event.getLevel())
                 .key("message").value(event.getMessage())
+                .key("throwableInfo").value(throwableInfo)
                 .key("timestamp").value(event.getTimeStamp())
                 .endObject()
                 .toString();
@@ -104,6 +115,10 @@ public class RiakAppender extends org.apache.log4j.AppenderSkeleton
 
     public void setBucket(String bucket) {
         this.bucket = bucket;
+    }
+
+    public void setTraceEnabled(boolean traceEnabled) {
+        Tracer.setTraceEnabled(traceEnabled);
     }
 
     public void close() {

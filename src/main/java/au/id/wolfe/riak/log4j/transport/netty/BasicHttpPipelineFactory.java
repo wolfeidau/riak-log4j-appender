@@ -25,17 +25,16 @@ import org.jboss.netty.handler.codec.http.HttpContentDecompressor;
 
 
 /**
- *
+ * Basic pipeline factory.
  */
-public class NettyHttpClientPipelineFactory implements ChannelPipelineFactory {
+public class BasicHttpPipelineFactory implements ChannelPipelineFactory {
 
-    RiakResponseHandler storeResponseHandler;
-
-    public NettyHttpClientPipelineFactory(RiakResponseHandler storeResponseHandler) {
-        this.storeResponseHandler = storeResponseHandler;
-    }
-
-    public ChannelPipeline getPipeline() throws Exception {
+    /**
+     * Builds a basic pipeline for use in the client.
+     *
+     * @return A new pipeline.
+     */
+    public ChannelPipeline getPipeline() {
 
         // Create a default pipeline implementation.
         ChannelPipeline pipeline = Channels.pipeline();
@@ -44,9 +43,6 @@ public class NettyHttpClientPipelineFactory implements ChannelPipelineFactory {
 
         // Remove the following line if you don't want automatic content decompression.
         pipeline.addLast("inflater", new HttpContentDecompressor());
-
-        // response handler
-        pipeline.addLast("handler", storeResponseHandler);
 
         return pipeline;
     }

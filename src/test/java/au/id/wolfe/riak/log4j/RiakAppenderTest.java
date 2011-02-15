@@ -21,6 +21,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 /**
@@ -36,6 +37,7 @@ public class RiakAppenderTest {
         riakAppender.setName("bob");
         riakAppender.setUrl("http://192.168.0.39:8098/riak");
         //riakAppender.setUrl("http://172.16.252.128:8098/riak");
+        riakAppender.setTraceEnabled(false);
         riakAppender.setBucket("testing");
 
         final Logger logger = Logger.getRootLogger();
@@ -44,10 +46,25 @@ public class RiakAppenderTest {
 
         logger.addAppender(riakAppender);
 
+        System.out.println("Base messages");
+
+        long startTime = System.currentTimeMillis();
+
         for (int i = 0; i < 10000; i++) {
-            logger.error("message " + i, new IOException("Some random IO error"));
+            logger.error("message " + i);
         }
 
+        System.out.println("Base message with Exceptions");
+
+        for (int i = 0; i < 10; i++) {
+            logger.error("message " + i, new IOException("Some random IO error", new FileNotFoundException("Not found bro.")));
+        }
+
+        long endTime = System.currentTimeMillis();
+
+        System.out.println("Took " + (endTime - startTime));
+
+        //Thread.sleep(50000);
 
     }
 }

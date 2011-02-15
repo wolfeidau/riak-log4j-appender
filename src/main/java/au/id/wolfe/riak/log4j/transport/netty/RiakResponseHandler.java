@@ -18,6 +18,7 @@
 package au.id.wolfe.riak.log4j.transport.netty;
 
 import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.jboss.netty.handler.codec.http.HttpResponse;
@@ -73,6 +74,17 @@ public class RiakResponseHandler extends SimpleChannelUpstreamHandler {
             futureResult.done();
         }
 
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
+
+        if (futureResult.isCancelled()){
+            return;
+        }
+        futureResult.start();
+        futureResult.setException(e.getCause());
+        futureResult.done();
     }
 
     public Future<Result> getFutureResult() {
@@ -177,7 +189,9 @@ public class RiakResponseHandler extends SimpleChannelUpstreamHandler {
 
         public int getStatusCode();
 
-        void setStatusCode(int statusCode);
+        public void setStatusCode(int statusCode);
+
+        public String getHeadersAsString();
     }
 
     public static class ResultImpl implements Result {
@@ -196,6 +210,23 @@ public class RiakResponseHandler extends SimpleChannelUpstreamHandler {
 
         public void setStatusCode(int statusCode) {
             this.statusCode = statusCode;
+        }
+
+        public String getHeadersAsString() {
+            StringBuilder stringBuilder = new StringBuilder();
+
+            stringBuilder.append("{ ");
+            for (String key : responseHeaders.keySet()) {
+                stringBuilder.append("").append(key);
+                stringBuilder.append(" = { ");
+                for (String headerValue : responseHeaders.get(key)) {
+                    stringBuilder.append(headerValue).append(" ");
+                }
+                stringBuilder.append("} ");
+            }
+            stringBuilder.append(" }");
+
+            return stringBuilder.toString();
         }
     }
 
