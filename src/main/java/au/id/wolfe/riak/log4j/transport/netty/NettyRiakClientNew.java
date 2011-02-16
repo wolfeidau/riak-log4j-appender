@@ -20,6 +20,7 @@ package au.id.wolfe.riak.log4j.transport.netty;
 import au.id.wolfe.riak.log4j.transport.RiakClient;
 import au.id.wolfe.riak.log4j.transport.RiakTransportException;
 import au.id.wolfe.riak.log4j.transport.netty.RiakResponseHandler.Result;
+import au.id.wolfe.riak.log4j.utils.URIUtils;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
@@ -28,9 +29,12 @@ import org.jboss.netty.handler.codec.http.DefaultHttpRequest;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpMethod;
 import org.jboss.netty.handler.codec.http.HttpRequest;
+import org.jboss.netty.handler.codec.http.HttpResponseStatus;
 import org.jboss.netty.handler.codec.http.HttpVersion;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.concurrent.ExecutionException;
@@ -54,22 +58,23 @@ public class NettyRiakClientNew implements RiakClient {
         nettyTransportHandlerFactory = new NettyTransportHandlerFactory(clientSocketChannelFactoryProvider);
     }
 
-    public void store(String hostUrl, String bucket, String message) throws RiakTransportException {
+    public void store(String hostUrl, String bucket, String key, String message) throws RiakTransportException {
 
         log("message\n" + message);
 
         ChannelBuffer ch = ChannelBuffers.copiedBuffer(message.toCharArray(), Charset.defaultCharset());
 
-        String url = buildRiakURL(hostUrl, bucket);
-
         URL target;
 
         try {
-            target = new URL(url);
+            target = URIUtils.appendToURIPath(URI.create(hostUrl), bucket, key).toURL();
         } catch (MalformedURLException e) {
             throw new RiakTransportException("Invalid URL.");
+        } catch (URISyntaxException e) {
+            throw new RiakTransportException("Unable to build URI from bucket and key.");
         }
 
+//      System.out.println("connecting to " + target.toString());
 
         NettyTransportHandler nettyTransportHandler =
                 nettyTransportHandlerFactory.getNettyTransportHandler(target, new BasicHttpPipelineFactory());
@@ -104,7 +109,7 @@ public class NettyRiakClientNew implements RiakClient {
 
             result = futureResult.get(60, TimeUnit.SECONDS);
 
-            if (result.getStatusCode() != 201) {
+            if (result.getStatusCode() != HttpResponseStatus.NO_CONTENT.getCode()) {
                 nettyTransportHandler.end();
                 throw new RiakTransportException("Invalid response status code = " + result.getStatusCode());
             }
@@ -136,7 +141,7 @@ public class NettyRiakClientNew implements RiakClient {
     public void close() {
 
         // Shut down executor threads to exit.
-        //bootstrap.releaseExternalResources();
+
         nettyTransportHandlerFactory.shutdown();
 
     }

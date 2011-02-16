@@ -23,7 +23,7 @@ public class NettyTransportHandler {
 
     private boolean inCache;
     private boolean keepingAlive = true;
-    private int keepAliveConnections = NettyTransportHandlerFactory.DEFAULT_KEEP_ALIVE_CON_COUNT;
+    //private int keepAliveConnections = NettyTransportHandlerFactory.DEFAULT_KEEP_ALIVE_CON_COUNT;
     private NettyTransportHandlerFactory nettyTransportHandlerFactory;
 
     NettyTransportHandler(URL url, ChannelPipelineFactory channelPipelineFactory, ChannelFactory channelFactory) {
@@ -55,7 +55,7 @@ public class NettyTransportHandler {
      */
     public void end() {
 
-        Tracer.log("Ending connection to " + url.toString());
+        System.out.println("Ending connection to " + url.toString());
 
         keepingAlive = false;
         if (channel == null) {
@@ -70,9 +70,10 @@ public class NettyTransportHandler {
 
     public void finished() {
 
-        keepAliveConnections--;
+        //keepAliveConnections--;
 
-        if (keepAliveConnections > 0 && keepingAlive) {
+        //if (keepAliveConnections > 0 && keepingAlive) {
+        if (keepingAlive) {
             nettyTransportHandlerFactory.putInCache(this);
         } else {
             end();

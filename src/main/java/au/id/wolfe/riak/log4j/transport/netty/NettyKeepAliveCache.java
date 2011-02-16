@@ -2,6 +2,7 @@ package au.id.wolfe.riak.log4j.transport.netty;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Stack;
@@ -18,7 +19,7 @@ import static au.id.wolfe.riak.log4j.utils.Tracer.log;
 public class NettyKeepAliveCache implements Runnable {
 
     /* This is the number of connections which will be retained for a given URL */
-    public static final int DEFAULT_MAX_CONNECTIONS = 5;
+    public static final int MAX_CONNECTIONS = 5;
 
     /* This is the value in seconds for how long connections live */
     public static final int LIFETIME = 5;
@@ -50,7 +51,9 @@ public class NettyKeepAliveCache implements Runnable {
             transportHandlerVector.put(nettyTransportHandler);
             keepAliveTable.put(keepAliveKey, transportHandlerVector);
         } else {
-            transportHandlerVector.put(nettyTransportHandler);
+            if (transportHandlerVector.size() < MAX_CONNECTIONS) {
+                transportHandlerVector.put(nettyTransportHandler);
+            }
         }
 
     }
@@ -138,7 +141,8 @@ public class NettyKeepAliveCache implements Runnable {
                     KeepAliveEntry keepAliveEntry = pop();
 
                     if ((currentTime - keepAliveEntry.idleStartTime) > sleepTimeInMilliseconds) {
-//                        System.out.println("Idle time hit " + (currentTime - keepAliveEntry.idleStartTime));
+//                      System.out.println("Idle time = " +
+//                          (currentTime - keepAliveEntry.idleStartTime) + ", " + keepAliveTable.size());
                         keepAliveEntry.nettyTransportHandler.end();
                     } else {
                         nettyTransportHandler = keepAliveEntry.nettyTransportHandler;
@@ -152,7 +156,7 @@ public class NettyKeepAliveCache implements Runnable {
         }
 
         synchronized void put(NettyTransportHandler nettyTransportHandler) {
-            if (size() > DEFAULT_MAX_CONNECTIONS) {
+            if (size() > MAX_CONNECTIONS) {
 //                System.out.println("Max connections hit");
                 nettyTransportHandler.end();
             } else {
@@ -207,11 +211,16 @@ public class NettyKeepAliveCache implements Runnable {
         keepAliveExecutorService.shutdownNow();
 
         for (TransportHandlerVector transportHandlerVector : keepAliveTable.values()) {
-            transportHandlerVector.get().end();
+
+            Enumeration<KeepAliveEntry> elements =  transportHandlerVector.elements();
+
+            while (elements.hasMoreElements()) {
+                KeepAliveEntry keepAliveEntry = elements.nextElement();
+                keepAliveEntry.nettyTransportHandler.end();
+            }
         }
 
+
         keepAliveTable.clear();
-
-
     }
 }

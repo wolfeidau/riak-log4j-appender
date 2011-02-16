@@ -27,6 +27,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONStringer;
 
+import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicLong;
@@ -59,20 +60,14 @@ public class RiakAppender extends org.apache.log4j.AppenderSkeleton
     protected void append(LoggingEvent event) {
 
         try {
-            storeJson(buildJson(event));
+            String jsonObject = buildJson(event);
+            riakClient.store(url, bucket, buildKey(event), jsonObject);
         } catch (JSONException e) {
             errorHandler.error("Error encoding record to JSON format.", e, ErrorCode.GENERIC_FAILURE);
-        }
-
-    }
-
-    /* Uses riak client to store the object */
-    private void storeJson(String jsonObject) {
-        try {
-            riakClient.store(url, bucket, jsonObject);
         } catch (RiakTransportException e) {
             errorHandler.error("Error storing record", e, ErrorCode.WRITE_FAILURE);
         }
+
     }
 
     /* builds the JSON string containing the log event attributes i wanted */
@@ -92,7 +87,7 @@ public class RiakAppender extends org.apache.log4j.AppenderSkeleton
                 .key("level").value(event.getLevel())
                 .key("message").value(event.getMessage())
                 .key("throwableInfo").value(throwableInfo)
-                .key("timestamp").value(event.getTimeStamp())
+                .key("timestamp").value(format.format(new Date(event.getTimeStamp())))
                 .endObject()
                 .toString();
 
@@ -100,11 +95,7 @@ public class RiakAppender extends org.apache.log4j.AppenderSkeleton
 
     /* Builds the key for the log entry, at this stage it is {RFC822date}-{sequence} */
     private String buildKey(LoggingEvent event) {
-
-        String dateStamp = format.format(new Date(event.getTimeStamp()));
-        long sequenceValue = sequence.getAndDecrement();
-
-        return String.format("%s-%d", dateStamp, sequenceValue);
+        return String.format("%d-%d", event.getTimeStamp(), sequence.getAndIncrement());
     }
 
 

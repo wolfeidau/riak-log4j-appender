@@ -22,7 +22,7 @@ package au.id.wolfe.riak.log4j.transport;
  */
 public interface RiakClient {
 
-    void store(String hostUri, String bucket, String message) throws RiakTransportException;
+    void store(String hostUrl, String bucket, String key, String message) throws RiakTransportException;
 
     void close();
 
