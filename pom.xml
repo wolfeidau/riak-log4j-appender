@@ -3,11 +3,20 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
+    <name>riak-log4j</name>
     <groupId>au.id.wolfe.riak.log4j</groupId>
     <artifactId>riak-log4j</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <inceptionYear>2011</inceptionYear>
+    <packaging>pom</packaging>
+    <url>http://github.com/wolfeidau/riak-log4j-appender</url>
+    <description>A log4j appender which writes to a bucket in riak.</description>
+
+    <scm>
+        <connection>scm:git:git://github.com/wolfeidau/riak-log4j-appender.git</connection>
+        <url>scm:git:git://github.com/wolfeidau/riak-log4j-appender.git</url>
+        <developerConnection>scm:git:git://github.com/wolfeidau/riak-log4j-appender.git</developerConnection>
+    </scm>
 
     <organization>
         <name>Mark Wolfe</name>
@@ -35,13 +44,14 @@
         </license>
     </licenses>
 
-
     <build>
         <plugins>
             <plugin>
+                <inherited>false</inherited>
                 <groupId>com.mycila.maven-license-plugin</groupId>
                 <artifactId>maven-license-plugin</artifactId>
                 <configuration>
+                    <aggregate>true</aggregate>
                     <properties>
                         <owner>Mark Wolfe</owner>
                         <year>${project.inceptionYear}</year>
@@ -49,16 +59,35 @@
                     </properties>
                     <header>${basedir}/src/etc/header.txt</header>
                     <excludes>
+                        <exclude>LICENSE.txt</exclude>
                         <exclude>${basedir}/src/etc/header.txt</exclude>
-                        <exclude>src/main/java/org/json/*.java</exclude>
+                        <exclude>**/org/json/*.java</exclude>
+                        <!-- not written by me -->
                         <exclude>.idea/**</exclude>
                     </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>check-headers</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
                 </configuration>
             </plugin>
 
         </plugins>
     </build>
-
 
     <reporting>
         <plugins>
@@ -75,49 +104,6 @@
         </plugins>
     </reporting>
 
-    <dependencies>
-
-        <dependency>
-            <groupId>org.jboss.netty</groupId>
-            <artifactId>netty</artifactId>
-            <version>3.2.3.Final</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.16</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>javax.jms</groupId>
-                    <artifactId>jms</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.sun.jdmk</groupId>
-                    <artifactId>jmxtools</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.sun.jmx</groupId>
-                    <artifactId>jmxri</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.8.2</version>
-            <scope>test</scope>
-        </dependency>
-
-    </dependencies>
-
-
     <repositories>
         <repository>
             <id>repository.jboss.org</id>
@@ -127,4 +113,10 @@
             </snapshots>
         </repository>
     </repositories>
+
+    <modules>
+        <module>riak-log4j-appender</module>
+        <module>riak-log4j-example-webapp</module>
+    </modules>
+
 </project>
