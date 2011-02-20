@@ -13,9 +13,9 @@ enable simple analysis of data loss.
 
 This library is roughly feature complete for my first test run. That said I am keen to see some data before doing another
 round of hacking. The features I will be working on next are:
-* HTTPS support
-* basic auth support
-* proxy support
+*  HTTPS support
+*  basic auth support
+*  proxy support
 
 # Acknowledgments
 
@@ -26,5 +26,5 @@ quick and easy development of network applications such as protocol servers and 
 
 When looking for some baseline values for the http connection re-use I chose the following values
 (see [Wikipedia - HTTP persistent connection](http://en.wikipedia.org/wiki/HTTP_persistent_connection)).
-* Max Connections per protocol/host/port is 5
-* Connection Idle timeout is 115 seconds
+*  Max Connections per protocol/host/port is 5
+*  Connection Idle timeout is 115 seconds
