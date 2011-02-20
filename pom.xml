@@ -61,8 +61,8 @@
                     <excludes>
                         <exclude>LICENSE.txt</exclude>
                         <exclude>${basedir}/src/etc/header.txt</exclude>
-                        <exclude>**/org/json/*.java</exclude>
                         <!-- not written by me -->
+                        <exclude>**/org/json/*.java</exclude>
                         <exclude>.idea/**</exclude>
                     </excludes>
                 </configuration>

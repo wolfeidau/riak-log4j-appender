@@ -47,20 +47,20 @@ import static au.id.wolfe.riak.log4j.utils.Tracer.log;
 /**
  * Implementation of a basic riak client using Netty.
  */
-public class NettyRiakClientNew implements RiakClient {
+public class NettyRiakClient implements RiakClient {
 
     ClientSocketChannelFactoryProvider clientSocketChannelFactoryProvider;
     NettyTransportHandlerFactory nettyTransportHandlerFactory;
 
 
-    public NettyRiakClientNew() {
+    public NettyRiakClient() {
         clientSocketChannelFactoryProvider = new DefaultClientSocketChannelFactoryProvider();
         nettyTransportHandlerFactory = new NettyTransportHandlerFactory(clientSocketChannelFactoryProvider);
     }
 
     public void store(String hostUrl, String bucket, String key, String message) throws RiakTransportException {
 
-        log("message\n" + message);
+        System.out.println("message\n" + message);
 
         ChannelBuffer ch = ChannelBuffers.copiedBuffer(message.toCharArray(), Charset.defaultCharset());
 

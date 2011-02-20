@@ -26,13 +26,10 @@ import java.net.URL;
  */
 public class NettyTransportHandlerFactory {
 
-    /* number of connections to keep alive */
-    public static final int DEFAULT_KEEP_ALIVE_CON_COUNT = 5;
-
     /* client socket provider */
     private ClientSocketChannelFactoryProvider factoryProvider;
 
-    // keep alive cache
+    /* keep alive cache, this is static as we want to pool for all appenders */
     private static NettyKeepAliveCache keepAliveCache = new NettyKeepAliveCache();
 
     public NettyTransportHandlerFactory(ClientSocketChannelFactoryProvider factoryProvider) {

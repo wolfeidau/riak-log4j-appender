@@ -57,7 +57,7 @@ public class RiakAppenderTester {
 
         long startTime = System.currentTimeMillis();
 
-        for (int i = 0; i < 100000; i++) {
+        for (int i = 0; i < 10; i++) {
             //Thread.sleep(1000);
             logger.error("message " + i);
         }

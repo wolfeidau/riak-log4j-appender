@@ -36,10 +36,10 @@ import static au.id.wolfe.riak.log4j.utils.Tracer.log;
 public class NettyKeepAliveCache implements Runnable {
 
     /* This is the number of connections which will be retained for a given URL */
-    public static final int MAX_CONNECTIONS = 5;
+    public static final int MAX_CONNECTIONS = 6;
 
     /* This is the value in seconds for how long connections live */
-    public static final int LIFETIME = 5;
+    public static final int LIFETIME = 115;
 
     private Hashtable<KeepAliveKey, TransportHandlerVector> keepAliveTable =
             new Hashtable<KeepAliveKey, TransportHandlerVector>();

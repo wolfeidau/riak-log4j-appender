@@ -17,22 +17,68 @@
 
 package au.id.wolfe.riak.log4j;
 
+import au.id.wolfe.riak.log4j.transport.RiakClient;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.json.JSONObject;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
-import java.net.URLEncoder;
-import java.nio.charset.Charset;
+import static junit.framework.Assert.assertEquals;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
 
 /**
  * Test the Riak Appender.
  */
+@RunWith(MockitoJUnitRunner.class)
 public class RiakAppenderTest {
+
+    private static final String TEST_NAME = "bob";
+    private static final String TEST_URL = "http://192.168.0.39:8098/riak";
+    private static final String TEST_BUCKET = "testing";
+
+    @Mock(name = "riakClient")
+    RiakClient riakClient;
+
+    @Captor
+    ArgumentCaptor<String> argumentCaptor;
+
+    RiakAppender riakAppender;
+
+    @Before
+    public void setup() throws Exception {
+
+        riakAppender = new RiakAppender(riakClient);
+        riakAppender.setName(TEST_NAME);
+        riakAppender.setUrl(TEST_URL);
+        riakAppender.setTraceEnabled(false);
+        riakAppender.setBucket(TEST_BUCKET);
+
+    }
 
     @Test
     public void testLogger() throws Exception {
-        String encode = URLEncoder.encode("1997-07-16T19:20:30.45+01:00", Charset.defaultCharset().name());
+        Logger logger = Logger.getRootLogger();
 
-        System.out.println(encode);
+        logger.setLevel(Level.ALL);
+        logger.addAppender(riakAppender);
 
+        logger.error("message from the logger test");
+
+        verify(riakClient).store(eq(TEST_URL), eq(TEST_BUCKET), anyString(), argumentCaptor.capture());
+
+        assertEquals(1, argumentCaptor.getAllValues().size());
+
+        String message = argumentCaptor.getAllValues().get(0);
+
+        JSONObject.testValidity(message);
 
     }
 }

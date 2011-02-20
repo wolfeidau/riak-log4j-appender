@@ -19,17 +19,17 @@ package au.id.wolfe.riak.log4j;
 
 import au.id.wolfe.riak.log4j.transport.RiakClient;
 import au.id.wolfe.riak.log4j.transport.RiakTransportException;
-import au.id.wolfe.riak.log4j.transport.netty.NettyRiakClientNew;
+import au.id.wolfe.riak.log4j.transport.netty.NettyRiakClient;
 import au.id.wolfe.riak.log4j.utils.Tracer;
 import org.apache.log4j.spi.ErrorCode;
 import org.apache.log4j.spi.LoggingEvent;
+import org.apache.log4j.spi.ThrowableInformation;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.json.JSONStringer;
 
-import java.net.URI;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -49,12 +49,25 @@ public class RiakAppender extends org.apache.log4j.AppenderSkeleton
     /* bucket this will append messages too */
     private String bucket;
 
-    /* RFC822 date formatter */
+    /* RFC822 date formatter
     private final SimpleDateFormat format =
             new SimpleDateFormat("yyyy-mm-DD'T'hh:mm:ssZ");
+    */
 
-    private RiakClient riakClient = new NettyRiakClientNew();
+    private RiakClient riakClient = new NettyRiakClient();
 
+    public RiakAppender() {
+        riakClient = new NettyRiakClient();
+    }
+
+    public RiakAppender(boolean isActive) {
+        super(isActive);
+        riakClient = new NettyRiakClient();
+    }
+
+    public RiakAppender(RiakClient riakClient) {
+        this.riakClient = riakClient;
+    }
 
     @Override
     protected void append(LoggingEvent event) {
@@ -70,26 +83,67 @@ public class RiakAppender extends org.apache.log4j.AppenderSkeleton
 
     }
 
-    /* builds the JSON string containing the log event attributes i wanted */
+    /**
+     * builds the JSON string containing the log event attributes.
+     *
+     * @param event log event
+     * @throws JSONException This may be caused by malformed string input.
+     * @return String containing log event serialised to JSON.
+     * @see java.util.logging.XMLFormatter
+     * */
     private String buildJson(LoggingEvent event) throws JSONException {
 
-        JSONArray throwableInfo = null;
+        JSONStringer jsonLogEvent;
 
+        jsonLogEvent = new JSONStringer();
 
-        if (event.getThrowableStrRep() != null) {
-            throwableInfo = new JSONArray(event.getThrowableStrRep());
+        jsonLogEvent.object();
+
+        if (event.getLocationInformation() != null) {
+            JSONObject sourceInfo = new JSONObject();
+
+            sourceInfo.put("class", event.getLocationInformation().getClassName());
+            sourceInfo.put("fileName", event.getLocationInformation().getFileName());
+            sourceInfo.put("lineNumber", event.getLocationInformation().getLineNumber());
+            sourceInfo.put("methodName", event.getLocationInformation().getMethodName());
+
+            jsonLogEvent.key("sourceInfo").value(sourceInfo);
         }
 
-        return new JSONStringer()
-                .object()
-                .key("thread").value(event.getThreadName())
-                .key("class").value(event.getFQNOfLoggerClass())
-                .key("level").value(event.getLevel())
-                .key("message").value(event.getMessage())
-                .key("throwableInfo").value(throwableInfo)
-                .key("timestamp").value(format.format(new Date(event.getTimeStamp())))
-                .endObject()
-                .toString();
+        jsonLogEvent.key("class").value(event.getFQNOfLoggerClass());
+        jsonLogEvent.key("level").value(event.getLevel());
+        jsonLogEvent.key("message").value(event.getMessage());
+
+        if (event.getThrowableInformation() != null) {
+            ThrowableInformation throwableInformation = event.getThrowableInformation();
+
+            JSONArray stack = new JSONArray();
+
+            for (StackTraceElement stackTraceElement : throwableInformation.getThrowable().getStackTrace()) {
+                JSONObject frame = new JSONObject();
+                frame.put("class", stackTraceElement.getClassName());
+                frame.put("method", stackTraceElement.getMethodName());
+                if (stackTraceElement.getLineNumber() >= 0) {
+                    frame.put("lineNumber", stackTraceElement.getLineNumber());
+                }
+                stack.put(frame);
+            }
+
+            JSONObject throwableInfo = new JSONObject();
+
+            throwableInfo.put("throwable", throwableInformation.getThrowable().getClass().getCanonicalName());
+            throwableInfo.put("message", throwableInformation.getThrowable().getMessage());
+            throwableInfo.put("stack", stack);
+
+            jsonLogEvent.key("throwableInfo").value(throwableInfo);
+
+
+        }
+
+        jsonLogEvent.key("millis").value(event.getTimeStamp());
+
+        return jsonLogEvent.endObject().toString();
+
 
     }
 

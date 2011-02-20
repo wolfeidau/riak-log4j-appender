@@ -1,0 +1,21 @@
+{"sourceInfo":{
+    "fileName":"RiakAppenderTester.java",
+    "lineNumber":"68",
+    "class":"au.id.wolfe.riak.log4j.tester.RiakAppenderTester",
+    "methodName":"run"
+},"class":"org.apache.log4j.Category","level":"ERROR","message":"message 9","throwableInfo":{
+    "message":"Some random IO error",
+    "throwable":"java.io.IOException",
+    "stack":[
+        {
+            "lineNumber":68,
+            "class":"au.id.wolfe.riak.log4j.tester.RiakAppenderTester",
+            "method":"run"
+        },
+        {
+            "lineNumber":35,
+            "class":"au.id.wolfe.riak.log4j.tester.RiakAppenderTester",
+            "method":"main"
+        }
+    ]
+},"millis":1298179204227}
