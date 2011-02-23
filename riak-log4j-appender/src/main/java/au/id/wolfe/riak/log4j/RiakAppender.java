@@ -73,8 +73,9 @@ public class RiakAppender extends org.apache.log4j.AppenderSkeleton
     protected void append(LoggingEvent event) {
 
         try {
-            String jsonObject = buildJson(event);
-            riakClient.store(url, bucket, buildKey(event), jsonObject);
+            String recordKey = buildKey(event);
+            String jsonObject = buildJson(recordKey, event);
+            riakClient.store(url, bucket, recordKey, jsonObject);
         } catch (JSONException e) {
             errorHandler.error("Error encoding record to JSON format.", e, ErrorCode.GENERIC_FAILURE);
         } catch (RiakTransportException e) {
@@ -86,12 +87,13 @@ public class RiakAppender extends org.apache.log4j.AppenderSkeleton
     /**
      * builds the JSON string containing the log event attributes.
      *
+     * @param recordKey The key for the record.
      * @param event log event
      * @throws JSONException This may be caused by malformed string input.
      * @return String containing log event serialised to JSON.
      * @see java.util.logging.XMLFormatter
      * */
-    private String buildJson(LoggingEvent event) throws JSONException {
+    private String buildJson(String recordKey, LoggingEvent event) throws JSONException {
 
         JSONStringer jsonLogEvent;
 
@@ -113,6 +115,10 @@ public class RiakAppender extends org.apache.log4j.AppenderSkeleton
         jsonLogEvent.key("class").value(event.getFQNOfLoggerClass());
         jsonLogEvent.key("level").value(event.getLevel());
         jsonLogEvent.key("message").value(event.getMessage());
+
+        // ripple specific information, I don't see any issue including it even if it is not used.
+        jsonLogEvent.key("record_id").value(recordKey);
+        jsonLogEvent.key("_type").value("LogRecord");
 
         if (event.getThrowableInformation() != null) {
             ThrowableInformation throwableInformation = event.getThrowableInformation();
