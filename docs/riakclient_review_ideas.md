@@ -7,6 +7,7 @@ Review
 ======
 
 Having reviewed the Java Riak client software for a few days it was clear that:
+
 * This had grown with the riak product, features have been added increasing its overall code base quite considerably.
 * It is bolted at the hip to the Apache HTTP client.
 * It is bolted to the JSON library included in the client.
@@ -24,6 +25,7 @@ Some Observations
 =================
 
 Once I had examined my own requirements I became interested in how others were using riak. From the mailing list it seems:
+
 * People were building routines which "loaded" data into riak and were asking about performance.
 * Others are using it to read data, and interface with the map reduce sub system.
 
@@ -33,21 +35,25 @@ Research Ideas
 ==============
 
 As the riak client can be divided into: 
+
 * Riak specific operations
 * Interactions via REST
 * HTTP transport for said REST
 * Proto buffers request response protocol
 
 I would recommend doing some research into those areas which the riak client will have in common with the REST clients out in the java community. These libraries embody quite a lot of experiance coping with the same issues faced by the riak client. In my view these are:
+
 * The HTTP library used gets refactored to oblivion..
 * There is a new JSON lib which goes really fast.
 * NIO2 comes out...
 
 REST frameworks to look at are:
+
 * Jersey
 * Restlet
 
 The HTTP client libraries to examine and test:
+
 * Apache HTTP client 4.x 
 * Jetty HTTP client
 * Sonatype async http client
@@ -58,6 +64,7 @@ Some Ideas
 ==========
 
 If I was to plan to rebuild this client, I would probably choose to continue the stable tree as is and start a more decoupled library with a focus on developer needs. The first building block would be assembling a write module that utilised a nio based client with a focus on:
+
 * More Store operations per second
 * More performant routines for chunked transfer of larger files. 
 
