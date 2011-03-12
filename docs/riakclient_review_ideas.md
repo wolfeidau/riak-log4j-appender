@@ -41,9 +41,9 @@ As the riak client can be divided into:
 * HTTP transport for said REST
 * Proto buffers request response protocol
 
-I would recommend doing some research into those areas which the riak client will have in common with the REST clients out in the java community. These libraries embody quite a lot of experiance coping with the same issues faced by the riak client. In my view these are:
+I would recommend doing some research into those areas which the riak client will have in common with the REST clients out in the Java community. These libraries embody quite a lot of experience coping with the same issues faced by the riak client. In my view these are:
 
-* The HTTP library used gets refactored to oblivion..
+* The HTTP library used gets re-factored to oblivion..
 * There is a new JSON lib which goes really fast.
 * NIO2 comes out...
 
@@ -57,6 +57,7 @@ The HTTP client libraries to examine and test:
 * Apache HTTP client 4.x 
 * Jetty HTTP client
 * Sonatype async http client
+* HTTP client built into the Sun Java Runtime
 * Netty, which supports HTTP and Protobuffers
 
 
@@ -66,13 +67,16 @@ Some Ideas
 If I was to plan to rebuild this client, I would probably choose to continue the stable tree as is and start a more decoupled library with a focus on developer needs. The first building block would be assembling a write module that utilised a nio based client with a focus on:
 
 * More Store operations per second
-* More performant routines for chunked transfer of larger files. 
+* More performance in routines using chunked transfer of larger messages. 
+* Less repetition in when building messages.
 
-Design wise I would go with a more fluent builder based model. A base http layer would be built with one ore more http libraries adapted to it. From thier each operation would be designed for configure once, reuse for many repeated operations.
+Design wise I would go with a more fluent builder based model. A base http layer would be built with one or more http libraries adapted to it. From their each operation would be designed for configure once, reuse for many repeated operations.
 
-The next area I would focus on is building a skeleton for the existing API "functions", like mapred and link navigation. Then like the ruby ripple API, I would build a nicely integrated high level client that pretty much did what a primitive ORM does. 
+The next area I would focus on is building a skeleton for the existing API "functions", like mapred and link navigation. Then like the ruby ripple API, I would build an integrated high level client that acted like a primitive ORM. 
 
-It would be nice to garner more information on how these tasks are performed, and indead how developers are structuring systems which interface with riak. 
+I would recommend also looking at providing a couple of project templates similar to the environment provided by ripple. Ripple adds not only a high level interface to riak, it also provides some routines to deploy mapred Java script libraries. This provides a captive introduction to interaction with riak rather than just a black box client.
+
+It would be nice to garner more information on how these tasks are performed, and indeed how developers are structuring systems which interface with riak. 
 
 Disclaimer
 ==========
